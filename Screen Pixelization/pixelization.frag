@@ -20,15 +20,20 @@ void main(void) {
     // Вычисляем текстурные координаты:
     vec2 TexCoords = gl_FragCoord.xy / u_resolution;
 
+    // Цвет:
+    vec4 color;
+
     // Вычисляем координаты "большого" пикселя:
     vec2 pixelated_coords = floor(TexCoords * u_resolution / u_pixel_size) * u_pixel_size / u_resolution;
 
     // Проверка на режим "сглаживания" (интерполяции) пикселей:
     if (u_use_smooth) {
         // Используем texture для выборки с интерполяцией:
-        FragColor = texture(u_texture, pixelated_coords);
+        color = texture(u_texture, pixelated_coords);
     } else {
         // Используем texelFetch для точной выборки без интерполяции:
-        FragColor = texelFetch(u_texture, ivec2(pixelated_coords * textureSize(u_texture, 0)), 0);
+        color = texelFetch(u_texture, ivec2(pixelated_coords * textureSize(u_texture, 0)), 0);
     }
+
+    FragColor = color;
 }
