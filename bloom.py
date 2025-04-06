@@ -46,7 +46,7 @@ def render_bloom(self, render_canvas: RenderCanvas, radius: int = 8, iters: int 
     # | пока работаем с текущем, а потом меняем их местами и делаем тоже самое.
     axis = 0
     self.bloom_shd.begin()
-    for _ in range(iters*2):
+    for _ in range(int(max(iters, 1)*2)):
         self.fbo_pingpong[axis].begin()
         self.bloom_shd.set_uniform("u_axis", axis)
         self.bloom_shd.set_uniform("u_radius", radius)
