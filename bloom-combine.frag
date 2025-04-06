@@ -10,13 +10,13 @@ uniform sampler2D u_bloom_texture;  // Текстура после размыт�
 uniform float u_exposure;           // 1.0 - Нормально. Чем больше, тем ярче. Чем меньше (до 0) тем темнее.
 
 // Координаты текстуры и выходной цвет:
-in vec2 TexCoord;
+in vec2 v_texcoord;
 out vec4 FragColor;
 
 // Основная функция:
 void main(void) {
     // Получаем цвета с текстур:
-    vec2 texcoord = vec2(TexCoord.x, 1.0-TexCoord.y);
+    vec2 texcoord = vec2(v_texcoord.x, 1.0-v_texcoord.y);
     vec4 orig = texture(u_orig_texture, texcoord);
     vec4 bloom = texture(u_bloom_texture, texcoord);
 
