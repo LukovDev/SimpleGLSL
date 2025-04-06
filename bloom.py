@@ -9,13 +9,13 @@ def start(self) -> None:
 
     # Основной шейдер свечения (размытия):
     self.bloom_shd = ShaderProgram(
-        vert=files.load_file("data/shaders/bloom.frag"),
+        vert=files.load_file("data/shaders/default.vert"),
         frag=files.load_file("data/shaders/bloom.frag")
     ).compile()
 
     # Шейдер комбинирования основной текстуры со свечением:
     self.bloom_combine = ShaderProgram(
-        vert=files.load_file("data/shaders/bloom-combine.frag"),
+        vert=files.load_file("data/shaders/default.vert"),
         frag=files.load_file("data/shaders/bloom-combine.frag")
     ).compile()
 
