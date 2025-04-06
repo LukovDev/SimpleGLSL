@@ -1,15 +1,14 @@
 //
-// low-color-level.frag - Шейдер фрагмента. Берёт текстуру кадра и ограничивает цветовой диапазон.
+// low-color.frag - Шейдер фрагмента. Берёт текстуру кадра и ограничивает цветовой диапазон.
 //
 
 #version 330 core
 
-
-// Входные переменные:
+// Входные параметры:
 uniform sampler2D u_texture;
-uniform vec2      u_resolution;
-uniform float     u_color_level;
-
+uniform vec2 u_resolution;
+uniform float u_color_level;
+uniform float u_time;
 
 // Выходной цвет:
 out vec4 FragColor;
