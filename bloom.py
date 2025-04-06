@@ -46,10 +46,10 @@ def render_bloom(self, render_canvas: RenderCanvas, radius: int = 8, iters: int 
     # | пока работаем с текущем, а потом меняем их местами и делаем тоже самое.
     axis = 0
     self.bloom_shd.begin()
+    self.bloom_shd.set_uniform("u_radius", radius)
     for _ in range(int(max(iters, 1)*2)):
         self.fbo_pingpong[axis].begin()
         self.bloom_shd.set_uniform("u_axis", axis)
-        self.bloom_shd.set_uniform("u_radius", radius)
         self.bloom_shd.set_sampler("u_texture", TextureUnits.rebind(self.fbo_pingpong[int(not axis)].texture, 0))
         self.fbo_pingpong[int(not axis)].render(custom_shader=True)
         self.fbo_pingpong[axis].end()
