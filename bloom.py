@@ -32,7 +32,7 @@ def start(self) -> None:
 
 
 # Рисуем блум:
-def render_bloom(self, render_canvas: RenderCanvas, radius: int = 8, iters: int = 2) -> None:
+def render_bloom(self, render_canvas: RenderCanvas, radius: int = 8, iters: int = 2, exposure: float = 1.0) -> None:
     # Очищаем буферы:
     for f in self.fbo_pingpong: f.clear()
 
@@ -60,7 +60,7 @@ def render_bloom(self, render_canvas: RenderCanvas, radius: int = 8, iters: int 
     self.bloom_combine.begin()
     self.bloom_combine.set_sampler("u_orig_texture", TextureUnits.rebind(render_canvas.texture, 0))
     self.bloom_combine.set_sampler("u_bloom_texture", TextureUnits.rebind(self.fbo_pingpong[int(not axis)].texture, 1))
-    self.bloom_combine.set_uniform("u_exposure", float(self.ui_val["exposure"]))
+    self.bloom_combine.set_uniform("u_exposure", exposure)
     render_canvas.render(custom_shader=True)
     self.bloom_combine.end()
 
@@ -85,6 +85,9 @@ def render(self, delta_time: float) -> None:
     # | размытия (чтобы убрать артефакты и повысить качество. Обычно
     # | достаточно от 1 до 2. Иногда можно поставить и 3-4, но не больше,
     # | иначе будет сильно падать FPS и вырастать нагрузка на GPU).
-    self.render_bloom(self.orig_layer, 32, 2)
+    # | Ещё есть параметр "exposure" который отвечает за интенсивность
+    # | свечения. Чем больше, тем выше яркость свечения и результата.
+    # | Чем меньше (до 0), тем темнее весь результат.
+    self.render_bloom(self.orig_layer, 32, 2, 1.0)
 
     # ...
