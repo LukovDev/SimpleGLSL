@@ -14,7 +14,7 @@ in vec2 v_texcoord;
 out vec4 FragColor;
 
 // Основная функция:
-void main(void) {
+void main() {
     // Получаем цвета с текстур:
     vec2 texcoord = vec2(v_texcoord.x, 1.0-v_texcoord.y);
     vec4 orig = texture(u_orig_texture, texcoord);
