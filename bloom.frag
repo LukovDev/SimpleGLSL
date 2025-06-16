@@ -14,7 +14,7 @@ in vec2 v_texcoord;
 out vec4 FragColor;
 
 // Основная функция:
-void main(void) {
+void main() {
     vec2 texcoord = vec2(v_texcoord.x, 1.0-v_texcoord.y);
     vec2 tex_offset = 1.0 / textureSize(u_texture, 0);
     vec4 sum = texture(u_texture, texcoord);  // Текущий пиксель по текущей координате текстуры.
