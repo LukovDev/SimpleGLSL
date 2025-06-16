@@ -14,7 +14,7 @@ uniform float u_time;
 out vec4 FragColor;
 
 // Основная функция:
-void main(void) {
+void main() {
     // Вычисляем текстурные координаты:
     vec2 TexCoords = gl_FragCoord.xy / u_resolution;
 
