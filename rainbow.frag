@@ -12,7 +12,7 @@ uniform vec2 u_resolution;
 out vec4 FragColor;
 
 // Основная функция:
-void main(void) {
+void main() {
     vec2 uv = gl_FragCoord.xy/u_resolution.xy;
     FragColor = vec4(0.5 + 0.5 * cos(u_time + uv.xyx + vec3(0, 2, 4)), 1.0);
 }
