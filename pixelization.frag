@@ -14,7 +14,7 @@ uniform bool u_use_smooth;
 out vec4 FragColor;
 
 // Основная функция:
-void main(void) {
+void main() {
     // Вычисляем текстурные координаты:
     vec2 TexCoords = gl_FragCoord.xy / u_resolution;
     vec4 color;  // Итоговый цвет.
