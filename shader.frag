@@ -12,7 +12,7 @@ in vec2 v_texcoord;
 out vec4 FragColor;
 
 // Основная функция:
-void main(void) {
+void main() {
     // Просто закрашиваем одним цветом:
     FragColor = vec4(u_color, 1);
 }
