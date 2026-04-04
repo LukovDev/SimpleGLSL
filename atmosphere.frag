@@ -22,10 +22,11 @@ uniform float u_atm_height;  // Высота атмосферы (её толщи
 uniform float u_density_falloff;  // Коэффициент затухания плотности атмосферы. Рекомендуется значение 3.
 uniform vec3  u_wavelenghts;      // Вектор волн света которые рассеиваются в атмосфере. Например: (720, 530, 440).
 uniform float u_scattering_strength;  // Коэффициент корректирующий вектор волн света. По умолчанию равен 1.
+uniform sampler2D u_blue_noise;  // Текстура белого шума, черно-белая, тайловая. По возможности старайтесь использовать.
 
 // Чем больше = тем качественнее и медленнее. Подбирайте параметры пока артефакты не пропадут (обычно не менее 10):
 uniform int u_num_in_scatter_points;     // Кол-во точек рассеивания.
-uniform int u_num_optical_depth_points;  // Кол-во точек оптической глубины атмосферы.
+uniform int u_num_optical_depth_points;  // Кол-во точек оптической глубины атмосферы. Очень сильно нагружает отрисовку.
 
 
 // Итоговый цвет:
@@ -34,7 +35,13 @@ out vec4 FragColor;
 
 // Константы:
 const float MAX_FLOAT = 3.402823466e+38;
-const float EPSILON = 0.0001;
+const float EPSILON = 0.000;
+
+
+// Функция случайных чисел Interleaved Gradient Noise:
+float rand(vec2 p) {
+    return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
+}
 
 
 // Матричный поворот по X:
@@ -117,11 +124,11 @@ vec3 calc_light(vec3 ray_pos, vec3 ray_dir, float ray_len, vec3 scatt_coefs, vec
     vec3 in_scatter_point = ray_pos;
     float step_size = ray_len / (u_num_in_scatter_points - 1);
     vec3 in_scattered_light = vec3(0.0f);
-    float view_ray_optical_depth = 0.0f;
+    vec3 sun_dir = normalize(u_sun_dir);
 
     for (int i = 0; i < u_num_in_scatter_points; i++) {
-        float sun_ray_len = ray_sphere(u_planet_pos, (u_planet_rad + u_atm_height), in_scatter_point, u_sun_dir).y;
-        float sun_ray_optical_depth = optical_depth(in_scatter_point, u_sun_dir, sun_ray_len);
+        float sun_ray_len = ray_sphere(u_planet_pos, (u_planet_rad + u_atm_height), in_scatter_point, sun_dir).y;
+        float sun_ray_optical_depth = optical_depth(in_scatter_point, sun_dir, sun_ray_len);
         float view_ray_optical_depth = optical_depth(in_scatter_point, -ray_dir, step_size * i);
         vec3 transmittance = exp(-(sun_ray_optical_depth + view_ray_optical_depth) * scatt_coefs);
         float local_density = density_at_point(in_scatter_point);
@@ -130,7 +137,8 @@ vec3 calc_light(vec3 ray_pos, vec3 ray_dir, float ray_len, vec3 scatt_coefs, vec
         in_scatter_point += ray_dir * step_size;
     }
 
-    float orig_col_transmittance = exp(-view_ray_optical_depth);
+    float total_view_optical_depth = optical_depth(ray_pos, ray_dir, ray_len);
+    float orig_col_transmittance = exp(-total_view_optical_depth);
     return orig_col * orig_col_transmittance + in_scattered_light;
 }
 
@@ -151,8 +159,8 @@ void main() {
 
     // Создаём луч для каждого пикселя камеры:
     vec3 ray_pos = u_camera_pos;
-    vec3 ray_dir = normalize(vec3(uv, -1.0f));
-    ray_dir = normalize((rotate_y(u_camera_rot.y) * rotate_x(u_camera_rot.x) * rotate_z(u_camera_rot.z)) * ray_dir);
+    mat3 cam_rot = rotate_z(u_camera_rot.z) * rotate_y(u_camera_rot.y) * rotate_x(u_camera_rot.x);
+    vec3 ray_dir = normalize(cam_rot * vec3(uv, -1.0));
 
     // Проверяем пересечения луча со сферами:
     vec2 atm_hit   = ray_sphere(u_planet_pos, (u_planet_rad + u_atm_height), ray_pos, ray_dir);
@@ -172,7 +180,7 @@ void main() {
     float dst_floor = min(scene_depth, floor_hit.x);
 
     // Сколько реально проходим в атмосфере:
-    float dst_through = min(dst_in_atm, dst_floor - dst_to_atm);
+    float dst_through = max(0.0, min(dst_in_atm, dst_floor - dst_to_atm));
 
     // Коэффициенты рассеивания цветов:
     vec3 scatt_coefs = scattering_coefficients(u_wavelenghts.x, u_wavelenghts.y, u_wavelenghts.z);
@@ -181,8 +189,13 @@ void main() {
     if (dst_through > 0) {
         vec3 point_in_atm = ray_pos + ray_dir * (dst_to_atm + EPSILON);
         vec3 light = calc_light(point_in_atm, ray_dir, dst_through - EPSILON*2.0f, scatt_coefs, orig_col.rgb);
-        FragColor = vec4(light.rgb, 1.0f);
+
+        // Смешиваем с шумом чтобы избавиться от квантования (ступенек градиента):
+        light += (texture(u_blue_noise, gl_FragCoord.xy / 128.0).r - 0.5) / 255.0;  // Используем текстуру если можно.
+        light += (rand(gl_FragCoord.xy) - 0.5) / 255.0;  // Иначе/также пытаемся сгладить псевдо-функцией шума.
+
+        FragColor = vec4(light.rgb, 1.0);
     } else {
-        FragColor = vec4(0, 0, 0, 1);  // TODO: FragColor = orig_col;
+        FragColor = vec4(0, 0, 0, 0);  // TODO: FragColor = orig_col;
     }
 }
