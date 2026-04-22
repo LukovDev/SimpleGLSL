@@ -9,8 +9,7 @@
 
 // Входные параметры:
 uniform vec2  u_resolution;  // Размер окна.
-uniform vec3  u_camera_pos;  // Координаты камеры.
-uniform vec3  u_camera_rot;  // Вращение камеры (pitch, yaw, roll).
+uniform mat4  u_inv_view;    // Инверсированная матрица вида.
 uniform float u_camera_fov;  // Угол обзора камеры.
 
 uniform vec3  u_planet_pos;  // Координаты атмосферы.
@@ -41,30 +40,6 @@ const float EPSILON = 0.000;
 // Функция случайных чисел Interleaved Gradient Noise:
 float rand(vec2 p) {
     return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
-}
-
-
-// Матричный поворот по X:
-mat3 rotate_x(float angle) {
-    float rad_angle = radians(angle);
-    float s = sin(rad_angle), c = cos(rad_angle);
-    return mat3(1.0, 0.0, 0.0, 0.0, c, -s, 0.0, s, c);
-}
-
-
-// Матричный поворот по Y:
-mat3 rotate_y(float angle) {
-    float rad_angle = radians(angle);
-    float s = sin(rad_angle), c = cos(rad_angle);
-    return mat3(c, 0.0, s, 0.0, 1.0, 0.0, -s, 0.0, c);
-}
-
-
-// Матричный поворот по Z:
-mat3 rotate_z(float angle) {
-    float rad_angle = radians(angle);
-    float s = sin(rad_angle), c = cos(rad_angle);
-    return mat3(c, -s, 0.0, s, c, 0.0, 0.0, 0.0, 1.0);
 }
 
 
@@ -157,9 +132,13 @@ void main() {
     vec2 uv = (gl_FragCoord.xy / u_resolution.xy * 2.0f - 1.0f) * u_resolution / u_resolution.y;
     uv *= tan(radians(u_camera_fov) / 2.0f);  // Применяем угол обзора.
 
-    // Создаём луч для каждого пикселя камеры:
-    vec3 ray_pos = u_camera_pos;
-    mat3 cam_rot = rotate_z(u_camera_rot.z) * rotate_y(u_camera_rot.y) * rotate_x(u_camera_rot.x);
+    // Извлекаем позицию камеры прямо из матрицы (4-й столбец):
+    vec3 ray_pos = u_inv_view[3].xyz;
+
+    // Извлекаем вращение из матрицы (верхняя левая часть 3x3):
+    mat3 cam_rot = mat3(u_inv_view);
+
+    // Формируем направление луча:
     vec3 ray_dir = normalize(cam_rot * vec3(uv, -1.0));
 
     // Проверяем пересечения луча со сферами:
