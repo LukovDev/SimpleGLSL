@@ -99,7 +99,9 @@ vec3 calc_light(vec3 ray_pos, vec3 ray_dir, float ray_len, vec3 scatt_coefs, vec
     vec3 in_scatter_point = ray_pos;
     float step_size = ray_len / (u_num_in_scatter_points - 1);
     vec3 in_scattered_light = vec3(0.0f);
-    vec3 sun_dir = normalize(u_sun_dir);
+    vec3 sun_dir;
+    if (length(u_sun_dir) == 0.0) sun_dir = u_inv_view[3].xyz;
+    else sun_dir = normalize(u_sun_dir);
 
     for (int i = 0; i < u_num_in_scatter_points; i++) {
         float sun_ray_len = ray_sphere(u_planet_pos, (u_planet_rad + u_atm_height), in_scatter_point, sun_dir).y;
